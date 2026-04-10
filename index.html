@@ -18,6 +18,7 @@
         }
         .display { text-align: center; width: 90%; }
         
+        /* Das Hauptwort - Die Essenz */
         #word { 
             font-size: clamp(3rem, 15vw, 6rem); 
             font-weight: 900; 
@@ -29,6 +30,7 @@
             transition: all 0.8s ease-in-out;
         }
 
+        /* Die feine Info darunter */
         #context { 
             font-size: 0.7rem; 
             color: #333; 
@@ -61,4 +63,77 @@
 const FocusDB = {
     "Widder": "AUFBRUCH", "Stier": "VERWURZELN", "Zwillinge": "AUSTAUSCH",
     "Krebs": "GEBORGENHEIT", "Löwe": "PRÄSENZ", "Jungfrau": "KLÄREN",
-    "
+    "Waage": "EINKLANG", "Skorpion": "WANDLUNG", "Schütze": "WEITE",
+    "Steinbock": "HALT", "Wassermann": "FREIHEIT", "Fische": "STILLE"
+};
+
+const ZodiacList = Object.keys(FocusDB);
+
+function getMoonSign(now) {
+    const JD = (now.getTime() / 86400000) + 2440587.5;
+    const T = (JD - 2451545.0) / 36525;
+    let lon = (218.316 + 481267.881 * T) + 6.289 * Math.sin((134.963 + 477198.867 * T) * Math.PI / 180);
+    lon = lon % 360; if (lon < 0) lon += 360;
+    return ZodiacList[Math.floor(lon / 30)];
+}
+
+function getSunSign(now) {
+    const m = now.getMonth() + 1;
+    const d = now.getDate();
+    if ((m == 3 && d >= 21) || (m == 4 && d <= 19)) return "Widder";
+    if ((m == 4 && d >= 20) || (m == 5 && d <= 20)) return "Stier";
+    if ((m == 5 && d >= 21) || (m == 6 && d <= 20)) return "Zwillinge";
+    if ((m == 6 && d >= 21) || (m == 7 && d <= 22)) return "Krebs";
+    if ((m == 7 && d >= 23) || (m == 8 && d <= 22)) return "Löwe";
+    if ((m == 8 && d >= 23) || (m == 9 && d <= 22)) return "Jungfrau";
+    if ((m == 9 && d >= 23) || (m == 10 && d <= 22)) return "Waage";
+    if ((m == 10 && d >= 23) || (m == 11 && d <= 21)) return "Skorpion";
+    if ((m == 11 && d >= 22) || (m == 12 && d <= 21)) return "Schütze";
+    if ((m == 12 && d >= 22) || (m == 1 && d <= 19)) return "Steinbock";
+    if ((m == 1 && d >= 20) || (m == 2 && d <= 18)) return "Wassermann";
+    return "Fische";
+}
+
+function update() {
+    try {
+        const now = new Date();
+        const s = getSunSign(now);
+        const m = getMoonSign(now);
+        const h = ZodiacList[(now.getHours() % 12)];
+        const min = ZodiacList[Math.floor(now.getMinutes() / 5)];
+
+        const gearVotes = [s, m, h, min];
+        const counts = {};
+        counts[min] = 0.1; 
+
+        gearVotes.forEach(z => {
+            counts[z] = (counts[z] || 0) + 1;
+        });
+
+        let winner = min;
+        for (let z in counts) {
+            if (counts[z] > counts[winner]) winner = z;
+        }
+
+        const mainWord = FocusDB[winner];
+        const wordEl = document.getElementById('word');
+        const contextEl = document.getElementById('context');
+
+        if(wordEl && wordEl.innerText !== mainWord) {
+            wordEl.innerText = mainWord;
+        }
+        
+        if(contextEl) {
+            contextEl.innerText = `Sonne: ${s} • Mond: ${m} • Stunde: ${h} • Minute: ${min}`;
+        }
+    } catch (e) {
+        console.log("Update Fehler:", e);
+    }
+}
+
+// WICHTIG FÜR HANDYS:
+window.onload = function() {
+    update();
+    setInterval(update, 5000);
+};
+</script>

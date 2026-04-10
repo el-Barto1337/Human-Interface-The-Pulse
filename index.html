@@ -60,25 +60,15 @@
 </div>
 
 <script>
-// Die neuen "fühlbaren" Wörter basierend auf unserer Magnetismus-Logik
 const FocusDB = {
-    "Widder": "AUFBRUCH",
-    "Stier": "VERWURZELN",
-    "Zwillinge": "AUSTAUSCH",
-    "Krebs": "GEBORGENHEIT",
-    "Löwe": "PRÄSENZ",
-    "Jungfrau": "KLÄREN",
-    "Waage": "EINKLANG",
-    "Skorpion": "WANDLUNG",
-    "Schütze": "WEITE",
-    "Steinbock": "HALT",
-    "Wassermann": "FREIHEIT",
-    "Fische": "STILLE"
+    "Widder": "AUFBRUCH", "Stier": "VERWURZELN", "Zwillinge": "AUSTAUSCH",
+    "Krebs": "GEBORGENHEIT", "Löwe": "PRÄSENZ", "Jungfrau": "KLÄREN",
+    "Waage": "EINKLANG", "Skorpion": "WANDLUNG", "Schütze": "WEITE",
+    "Steinbock": "HALT", "Wassermann": "FREIHEIT", "Fische": "STILLE"
 };
 
 const ZodiacList = Object.keys(FocusDB);
 
-// Mathematische Bestimmung des Mondzeichens
 function getMoonSign(now) {
     const JD = (now.getTime() / 86400000) + 2440587.5;
     const T = (JD - 2451545.0) / 36525;
@@ -87,7 +77,6 @@ function getMoonSign(now) {
     return ZodiacList[Math.floor(lon / 30)];
 }
 
-// Bestimmung des Sonnenzeichens (vereinfacht)
 function getSunSign(now) {
     const m = now.getMonth() + 1;
     const d = now.getDate();
@@ -106,52 +95,45 @@ function getSunSign(now) {
 }
 
 function update() {
-    const now = new Date();
-    
-    // Die 4 Zahnräder abfragen
-    const s = getSunSign(now);
-    const m = getMoonSign(now);
-    const h = ZodiacList[(now.getHours() % 12)];
-    const min = ZodiacList[Math.floor(now.getMinutes() / 5)];
+    try {
+        const now = new Date();
+        const s = getSunSign(now);
+        const m = getMoonSign(now);
+        const h = ZodiacList[(now.getHours() % 12)];
+        const min = ZodiacList[Math.floor(now.getMinutes() / 5)];
 
-    // DIE SYNTHESE: Wer hat gerade das Sagen?
-    const gearVotes = [s, m, h, min];
-    const counts = {};
-    
-    // Wir geben der Minute ein leicht höheres Gewicht (+0.1), 
-    // damit sie bei Gleichstand den Ausschlag gibt (für das Jetzt-Gefühl).
-    counts[min] = 0.1; 
+        const gearVotes = [s, m, h, min];
+        const counts = {};
+        counts[min] = 0.1; 
 
-    gearVotes.forEach(z => {
-        counts[z] = (counts[z] || 0) + 1;
-    });
+        gearVotes.forEach(z => {
+            counts[z] = (counts[z] || 0) + 1;
+        });
 
-    // Den Gewinner ermitteln
-    let winner = min;
-    for (let z in counts) {
-        if (counts[z] > counts[winner]) winner = z;
-    }
+        let winner = min;
+        for (let z in counts) {
+            if (counts[z] > counts[winner]) winner = z;
+        }
 
-    // Ausgabe
-    const mainWord = FocusDB[winner];
-    
-    // UI aktualisieren
-    const wordEl = document.getElementById('word');
-    if(wordEl.innerText !== mainWord) {
-        wordEl.style.opacity = 0;
-        setTimeout(() => {
+        const mainWord = FocusDB[winner];
+        const wordEl = document.getElementById('word');
+        const contextEl = document.getElementById('context');
+
+        if(wordEl && wordEl.innerText !== mainWord) {
             wordEl.innerText = mainWord;
-            wordEl.style.opacity = 1;
-        }, 400);
+        }
+        
+        if(contextEl) {
+            contextEl.innerText = `Sonne: ${s} • Mond: ${m} • Stunde: ${h} • Minute: ${min}`;
+        }
+    } catch (e) {
+        console.log("Update Fehler:", e);
     }
-    
-    document.getElementById('context').innerText = 
-        `Sonne: ${s} • Mond: ${m} • Stunde: ${h} • Minute: ${min}`;
 }
 
-// Start
-setInterval(update, 5000); // Alle 5 Sek prüfen reicht für die Synthese
-update();
+// WICHTIG FÜR HANDYS:
+window.onload = function() {
+    update();
+    setInterval(update, 5000);
+};
 </script>
-</body>
-</html>
